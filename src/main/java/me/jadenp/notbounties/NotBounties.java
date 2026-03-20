@@ -66,6 +66,8 @@ import static me.jadenp.notbounties.features.LanguageOptions.*;
  * Redo vouchers with persistent data, give items, & reward delay
  * Redis Pub Sub messages for player data storage. - proxy messaging too
  * database message table with server IDs
+ * Redo database system with large datasets in mind
+ * Async GUI and data requests
  * fast database option to use directly instead of an update interval
  * Multiple proxy databases
  * 1.21.6 dialog
@@ -74,6 +76,7 @@ import static me.jadenp.notbounties.features.LanguageOptions.*;
  * Bounty broadcast and other messages over proxy/redis
  * Reload skins after a configurable time
  * Do sorting of stats asynchronously before displaying for the player.
+ * EconomyShopGUI hook
  */
 public final class NotBounties extends JavaPlugin {
 
