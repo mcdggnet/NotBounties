@@ -144,6 +144,8 @@ reward-heads:
   claimed: false
   # drop player head when anyone is killed
   any-kill: false
+  # minimum bounty to give reward heads to setters and claimers
+  minimum-bounty: 0
 
 # send server stats like most other plugins do
 send-bstats: true

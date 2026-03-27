@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class BountyPosterProvider {
+public abstract class BountyPosterProvider implements SkinManager.SkinUpdateListener {
     /**
      * Translations for a chat color to an RGB color.
      */
@@ -96,6 +96,7 @@ public abstract class BountyPosterProvider {
         // render image in async
         RenderPoster renderPoster = new RenderPoster(name, this);
         renderPoster.setTaskImplementation(NotBounties.getServerImplementation().global().runAtFixedRate(renderPoster, 1, 40));
+        SkinManager.addUpdateListener(this);
     }
 
     /**
@@ -112,9 +113,9 @@ public abstract class BountyPosterProvider {
      */
     public void setPlayerFace(BufferedImage head, String name) {
         this.playerFace = head;
-        File imageFile = new File(BountyMap.getPosterDirectory() + File.separator + name.toLowerCase() + " face.png");
 
         if (BountyMap.isSaveTemplates()) {
+            File imageFile = new File(BountyMap.getPosterDirectory() + File.separator + name.toLowerCase() + " face.png");
             try {
                 ImageIO.write(head, "PNG", imageFile);
             } catch (IOException e) {
@@ -197,12 +198,14 @@ public abstract class BountyPosterProvider {
             || System.currentTimeMillis() - lastRender < BountyMap.getUpdateInterval()
             || playerFace == null || background == null)
             return;
+        SkinManager.isSkinLoaded(player.getUniqueId()); // checks if skin needs to be refreshed
         lastRender = System.currentTimeMillis();
         double bountyAmount = getBountyAmount();
         if (currentCost != bountyAmount || BountyMap.isAlwaysUpdate()) {
             // update poster
-            if (currentCost == -1 || getPixelColor(72,72) == null) {
-                // first render - draw background
+            if (currentCost == -1 || getPixelColor(72,72) == null
+                    || (currentCost != bountyAmount && currentCost == 0)) {
+                // first render or bounty is no longer 0
                 drawBackground();
                 drawPlayerFace();
             }
@@ -465,5 +468,21 @@ public abstract class BountyPosterProvider {
 
     public OfflinePlayer getPlayer() {
         return player;
+    }
+
+    @Override
+    public void onSkinUpdate(UUID uuid) {
+        if (uuid.equals(player.getUniqueId())) {
+            playerFace = null;
+            String name;
+            Bounty bounty = BountyManager.getBounty(uuid);
+            if (bounty != null) {
+                name = bounty.getName();
+            } else {
+                name = LoggedPlayers.getPlayerName(uuid);
+            }
+            RenderPoster renderPoster = new RenderPoster(name, this);
+            renderPoster.setTaskImplementation(NotBounties.getServerImplementation().global().runAtFixedRate(renderPoster, 1, 40));
+        }
     }
 }

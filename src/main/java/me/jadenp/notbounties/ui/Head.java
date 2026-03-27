@@ -53,8 +53,8 @@ public class Head {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         assert meta != null;
         if (NotBounties.getServerVersion() >= 18) {
-            //PlayerProfile profile = Bukkit.createPlayerProfile(uuid);
-            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+            PlayerProfile profile = Bukkit.createPlayerProfile(uuid); // should be same as the one in the head
+            //PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
             PlayerTextures textures = profile.getTextures();
             textures.setSkin(textureURL);
             profile.setTextures(textures);

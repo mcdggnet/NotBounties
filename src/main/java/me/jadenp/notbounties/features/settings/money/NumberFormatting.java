@@ -5,6 +5,8 @@ import me.jadenp.notbounties.NotBounties;
 import me.jadenp.notbounties.features.ActionCommands;
 import me.jadenp.notbounties.features.ConfigOptions;
 import me.jadenp.notbounties.features.LanguageOptions;
+import me.jadenp.notbounties.features.settings.integrations.Integrations;
+import me.jadenp.notbounties.features.settings.integrations.external_api.EconomyShopGUIClass;
 import me.jadenp.notbounties.ui.gui.CustomItem;
 import me.jadenp.notbounties.utils.BountyManager;
 import me.jadenp.notbounties.utils.ItemValue;
@@ -78,7 +80,7 @@ public class NumberFormatting {
     private static boolean tabCompleteItems = false;
     private static boolean bountyItemsDefaultGUI = false;
     public enum ItemValueMode {
-        AUTO, ESSENTIALS, FILE, DISABLE
+        AUTO, ESSENTIALS, FILE, ECONOMY_SHOP_GUI, DISABLE
     }
     private static ItemValueMode bountyItemsUseItemValues = ItemValueMode.AUTO;
     private static boolean essentialsEnabled = false;
@@ -293,7 +295,9 @@ public class NumberFormatting {
             plugin.getLogger().log(Level.WARNING, "Invalid item values mode: {0}", currencyOptions.getString("bounty-items.item-values"));
         }
         if (selectedMode == ItemValueMode.AUTO) {
-            if (essentialsEnabled)
+            if (ConfigOptions.getIntegrations().isEconomyShopGUIEnabled())
+                bountyItemsUseItemValues = ItemValueMode.ECONOMY_SHOP_GUI;
+            else if (essentialsEnabled)
                 bountyItemsUseItemValues = ItemValueMode.ESSENTIALS;
             else
                 bountyItemsUseItemValues = ItemValueMode.FILE;
@@ -355,6 +359,16 @@ public class NumberFormatting {
         return usingPapi || shouldUseDecimals();
     }
 
+    /**
+     * Calculates and returns the monetary value of a given item based on various value sources and configurations.
+     * The method supports different configurations (e.g., FILE, ESSENTIALS, ECONOMY_SHOP_GUI)
+     * to determine the value based on external systems or predefined values.
+     *
+     * @param item an {@code ItemStack} representing the item whose value is to be calculated. Can be null.
+     * @return a {@code double} value representing the calculated monetary value of the item.
+     *         Returns 0 if the item is null or if no value can be calculated under the given conditions.
+     * @throws ExcludedItemException if the item is excluded from valuation or has no defined value in specific cases.
+     */
     public static double getItemValue(ItemStack item) throws ExcludedItemException {
         if (item == null)
             return 0;
@@ -395,6 +409,15 @@ public class NumberFormatting {
                     return defaultItemValue * item.getAmount();
                 }
                 return price.doubleValue() * item.getAmount();
+            }
+            case ECONOMY_SHOP_GUI -> {
+                double sellPrice = EconomyShopGUIClass.getSellPrice(item);
+                if (sellPrice < 0) {
+                    if (defaultItemValue == 0)
+                        throw new ExcludedItemException(item.getType().toString());
+                    return defaultItemValue * item.getAmount();
+                }
+                return sellPrice * item.getAmount();
             }
             default -> {
                 return 0;

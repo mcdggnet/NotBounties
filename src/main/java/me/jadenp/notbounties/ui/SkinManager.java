@@ -32,23 +32,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class SkinManager {
+
+    public interface SkinUpdateListener {
+        void onSkinUpdate(UUID uuid);
+    }
     private static final Map<UUID, PlayerSkin> savedSkins = new ConcurrentHashMap<>();
-    private static final Map<UUID, Long> requestCooldown = new ConcurrentHashMap<>();
     private static final Cache<UUID, BufferedImage> isometricHeadCache = CacheBuilder.newBuilder()
             .maximumSize(100)
             .expireAfterWrite(1, TimeUnit.HOURS)
             .build();
-    private static final long REQUEST_FAIL_TIMEOUT = 60000 * 30L; // 30 min
-    private static final long CONCURRENT_REQUEST_INTERVAL = 10000;
     private static final long MOJANG_API_LIMIT_MS = 10 * 60 * 1000L;
     private static final long MOJANG_API_LIMIT_COUNT = 500;
     private static long lastLimitCheck = System.currentTimeMillis();
+    private static long refreshInterval = 86400000; // 24 hours in ms
+    private static final Map<UUID, Long> skinLoadTime = new ConcurrentHashMap<>();
+    private static final List<SkinUpdateListener> updateListeners = Collections.synchronizedList(new ArrayList<>());
     private static BufferedImage missingSkinFace;
     private static BufferedImage missingSkinIso;
     private static PlayerSkin missingSkin = new PlayerSkin(null, null, true);
     private static final IsometricRenderer isoRenderer = new IsometricRenderer();
 
     public static void loadConfiguration(ConfigurationSection config) {
+        refreshInterval = config.getLong("refresh-interval", 86400L) * 1000L;
         try {
             missingSkin = new PlayerSkin(new URI(Objects.requireNonNull(config.getString("missing-skin-url"))).toURL(), config.getString("missing-skin-id"), true);
             savedSkins.put(DataManager.GLOBAL_SERVER_ID, missingSkin);
@@ -70,7 +75,6 @@ public class SkinManager {
     }
 
     public static void refreshSkinRequests() {
-        requestCooldown.clear(); // clear request times
         try {
             savedSkins.entrySet().removeIf(pair -> isMissingSkin(pair.getValue()) && !pair.getKey().equals(DataManager.GLOBAL_SERVER_ID)); // remove any skins that are set to missing
         } catch (ConcurrentModificationException ignored) {
@@ -81,9 +85,26 @@ public class SkinManager {
         }
     }
 
+    /**
+     * Save a player skin to the cache.
+     * @param uuid UUID of the player to save the skin for.
+     * @param playerSkin The skin to save.
+     */
     public static void saveSkin(UUID uuid, PlayerSkin playerSkin) {
         savedSkins.put(uuid, playerSkin);
-        NotBounties.debugMessage("Saved player skin -> " + uuid, false);
+        skinLoadTime.put(uuid, System.currentTimeMillis());
+        NotBounties.debugMessage("Saved player skin -> " + uuid + " as " + playerSkin.url(), false);
+        synchronized (updateListeners) {
+            updateListeners.forEach(listener -> listener.onSkinUpdate(uuid));
+        }
+    }
+
+    public static void addUpdateListener(SkinUpdateListener listener) {
+        updateListeners.add(listener);
+    }
+
+    public static void removeUpdateListener(SkinUpdateListener listener) {
+        updateListeners.remove(listener);
     }
 
     /**
@@ -94,11 +115,21 @@ public class SkinManager {
     public static boolean isSkinLoaded(UUID uuid) {
         if (savedSkins.containsKey(uuid)) {
             // check if the skin is missing
-            if (isMissingSkin(savedSkins.get(uuid)) && !uuid.equals(DataManager.GLOBAL_SERVER_ID) && (!requestCooldown.containsKey(uuid) || requestCooldown.get(uuid) < System.currentTimeMillis())) {
+            if (isMissingSkin(savedSkins.get(uuid)) && !uuid.equals(DataManager.GLOBAL_SERVER_ID) && (System.currentTimeMillis() - skinLoadTime.getOrDefault(uuid, 0L) > refreshInterval)) {
                 // Skin is missing. Send a request to load the skin again if the uuid isn't on a cooldown
                 savedSkins.remove(uuid);
                 saveSkin(uuid);
                 return false;
+            }
+            // check if skin has expired
+            if (refreshInterval > 0 && !uuid.equals(DataManager.GLOBAL_SERVER_ID)) {
+                long loadTime = skinLoadTime.getOrDefault(uuid, 0L);
+                if (System.currentTimeMillis() - loadTime > refreshInterval) {
+                    // skin has expired
+                    if (isSafeToRequest()) {
+                        saveSkin(uuid);
+                    }
+                }
             }
             return true;
         }
@@ -122,15 +153,10 @@ public class SkinManager {
      *
      * @param uuid UUID of the player
      */
-    public static void saveSkin(UUID uuid) {
-        if (requestCooldown.containsKey(uuid) && System.currentTimeMillis() < requestCooldown.get(uuid)) {
-            return;
-        }
+    private static void saveSkin(UUID uuid) {
 
-        requestCooldown.put(uuid, System.currentTimeMillis() + CONCURRENT_REQUEST_INTERVAL);
+        skinLoadTime.put(uuid, System.currentTimeMillis());
         NotBounties.debugMessage("Attempting to save skin for: " + uuid, false);
-        if (savedSkins.containsKey(uuid))
-            return;
         requestSkin(uuid, true);
     }
 
@@ -181,7 +207,6 @@ public class SkinManager {
         long currentTime = System.currentTimeMillis();
         long minKeepTime = currentTime - MOJANG_API_LIMIT_MS;
         rateLimit.removeIf(l -> l < minKeepTime); // remove times more than 1 minute ago
-        requestCooldown.entrySet().removeIf(entry -> entry.getValue() < currentTime);
         SkinResponseHandler.checkSleep();
     }
 
@@ -212,8 +237,8 @@ public class SkinManager {
     }
 
     public static void failRequest(@NotNull UUID uuid) {
-        requestCooldown.put(uuid, System.currentTimeMillis() + REQUEST_FAIL_TIMEOUT);
-        savedSkins.computeIfAbsent(uuid, u -> missingSkin);
+        skinLoadTime.put(uuid, System.currentTimeMillis());
+        savedSkins.computeIfAbsent(uuid, k -> missingSkin);
     }
 
     public static boolean isMissingSkin(PlayerSkin playerSkin) {

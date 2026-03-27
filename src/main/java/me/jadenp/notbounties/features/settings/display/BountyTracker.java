@@ -9,6 +9,7 @@ import me.jadenp.notbounties.utils.BountyManager;
 import me.jadenp.notbounties.utils.DataManager;
 import me.jadenp.notbounties.features.LanguageOptions;
 import me.jadenp.notbounties.features.settings.money.NumberFormatting;
+import me.jadenp.notbounties.utils.LoggedPlayers;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -272,13 +273,16 @@ public class BountyTracker implements Listener {
                             contents[i] = null;
                             update = true;
                         }
-                    } else if (!hasBounty(trackedUUID)) {
-                        if (resetRemovedTrackers) {
-                            ItemStack emptyTracker = getEmptyTracker().clone();
-                            emptyTracker.setAmount(contents[i].getAmount());
-                            contents[i] = emptyTracker;
-                        } else {
-                            contents[i] = null;
+                    } else {
+                        Bounty bounty = BountyManager.getBounty(trackedUUID);
+                        if (bounty == null || bounty.getTotalDisplayBounty() < minBounty) {
+                            if (resetRemovedTrackers) {
+                                ItemStack emptyTracker = getEmptyTracker().clone();
+                                emptyTracker.setAmount(contents[i].getAmount());
+                                contents[i] = emptyTracker;
+                            } else {
+                                contents[i] = null;
+                            }
                         }
                         update = true;
                     }
@@ -589,11 +593,18 @@ public class BountyTracker implements Listener {
             return;
         }
         UUID trackedPlayer = meta.getOwningPlayer().getUniqueId();
+        if (LoggedPlayers.isMissing(trackedPlayer)) {
+            if (meta.getOwnerProfile() != null && meta.getOwnerProfile().getUniqueId() != null && !LoggedPlayers.isMissing(meta.getOwnerProfile().getUniqueId())) {
+                trackedPlayer = meta.getOwnerProfile().getUniqueId();
+            } else {
+                return;
+            }
+        }
         Bounty bounty = getBounty(trackedPlayer);
         if (bounty == null|| bounty.getTotalDisplayBounty() < minBounty)
             return;
-        ItemStack tracker = getTracker(trackedPlayer);
-        event.getInventory().setResult(tracker);
+        ItemStack trackerItem = getTracker(trackedPlayer);
+        event.getInventory().setResult(trackerItem);
     }
     // complete tracker crafting
     @EventHandler

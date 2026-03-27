@@ -26,6 +26,8 @@ softdepend:
   - packetevents
   - Skript
   - Konquest
+  - EconomyShopGUI
+  - EconomyShopGUI-Premium
 commands:
   notbounties:
     description: Use all of the bounty commands.
@@ -128,6 +130,8 @@ permissions:
       - notbounties.stats
       - notbounties.claim
       - notbounties.sort
+      - notbounties.crafttracker
+      - notbounties.craftposter
   notbounties.immunity.murder:
     default: false
     description: Immune to murder auto-bounties.

@@ -246,6 +246,26 @@ public class BountyHunt {
         }
 
         String subCommand = args[1].toLowerCase();
+        if (subCommand.equalsIgnoreCase("cancel")) {
+            if (!hasPermission(sender, adminPermission, "notbounties.admin")) {
+                return failNoPermission(sender, silent, parser);
+            }
+            if (args.length <= 2) {
+                return failUnknownCommand(sender, silent, parser, "help.admin");
+            }
+            UUID uuid = LoggedPlayers.getPlayer(args[2]);
+            if (uuid == null) {
+                return failUnknownPlayer(sender, silent, args[2], parser);
+            }
+            BountyHunt hunt = getHunt(uuid);
+            if (hunt == null) {
+                return failMessage(sender, silent, parse(getPrefix() + getMessage("no-hunt-found"), LoggedPlayers.getPlayerName(uuid), parser));
+            }
+            if (!hunt.isParticipating(parser.getUniqueId()))
+                sender.sendMessage(parse(getPrefix() + getMessage("hunt-end"), LoggedPlayers.getPlayerName(uuid), parser));
+            endHunt(uuid);
+            return true;
+        }
 
         return switch (subCommand) {
             case "join" -> handleJoinCommand(sender, args, silent, parser);

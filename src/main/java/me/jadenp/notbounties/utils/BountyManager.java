@@ -398,43 +398,45 @@ public class BountyManager {
 
         // hand out reward heads
         RewardHead rewardHead = new RewardHead(player.getUniqueId(), killer.getUniqueId(), bounty.getTotalDisplayBounty(killer), LanguageOptions.parse(LanguageOptions.getMessage("refund-reason-reward-head"), player));
-        if (RewardHead.isRewardSetters()) {
-            // reward head for setters
-            Set<UUID> givenHead = new HashSet<>(); // record whose head has been given out
-            givenHead.add(DataManager.GLOBAL_SERVER_ID); // console id added so a head isn't attempted to be given to it
-            for (Setter setter : claimedBounties) {
-                if (!givenHead.contains(setter.getUuid())) {
-                    givenHead.add(setter.getUuid());
-                    Player p = Bukkit.getPlayer(setter.getUuid());
-                    if (p != null) {
-                        // setter is online
-                        if (killer.getUniqueId().equals(setter.getUuid()) && droppedHead != null)
-                            // if the killer is a setter, remove the dropped head, so they only get one for being a setter
-                            droppedHead.remove();
-                        // check to make sure the setter isn't the killer and won't get another head for claiming
-                        if (!RewardHead.isRewardKiller() || !Objects.requireNonNull(killer).getUniqueId().equals(setter.getUuid())) {
-                            rewardHead.giveRefund(p); // give head ;)
-                            NotBounties.debugMessage("Gave setter " + p.getName() + " a player skull for the bounty.", false);
+        if (bounty.getTotalDisplayBounty(killer) >= RewardHead.getMinimumBounty()) {
+            if (RewardHead.isRewardSetters()) {
+                // reward head for setters
+                Set<UUID> givenHead = new HashSet<>(); // record whose head has been given out
+                givenHead.add(DataManager.GLOBAL_SERVER_ID); // console id added so a head isn't attempted to be given to it
+                for (Setter setter : claimedBounties) {
+                    if (!givenHead.contains(setter.getUuid())) {
+                        givenHead.add(setter.getUuid());
+                        Player p = Bukkit.getPlayer(setter.getUuid());
+                        if (p != null) {
+                            // setter is online
+                            if (killer.getUniqueId().equals(setter.getUuid()) && droppedHead != null)
+                                // if the killer is a setter, remove the dropped head, so they only get one for being a setter
+                                droppedHead.remove();
+                            // check to make sure the setter isn't the killer and won't get another head for claiming
+                            if (!RewardHead.isRewardKiller() || !Objects.requireNonNull(killer).getUniqueId().equals(setter.getUuid())) {
+                                rewardHead.giveRefund(p); // give head ;)
+                                NotBounties.debugMessage("Gave setter " + p.getName() + " a player skull for the bounty.", false);
+                            }
+                        } else {
+                            // Setter is offline.
+                            // Save reward head to player data.
+                            PlayerData playerData = DataManager.getPlayerData(setter.getUuid());
+                            playerData.addRefund(rewardHead);
+                            NotBounties.getServerImplementation().async().runNow(() -> DataManager.syncPlayerData(playerData.getUuid(), null));
+                            NotBounties.debugMessage("Will give " + playerData.getPlayerName() + " a player skull when they log on next for the bounty.", false);
                         }
-                    } else {
-                        // Setter is offline.
-                        // Save reward head to player data.
-                        PlayerData playerData = DataManager.getPlayerData(setter.getUuid());
-                        playerData.addRefund(rewardHead);
-                        NotBounties.getServerImplementation().async().runNow(() -> DataManager.syncPlayerData(playerData.getUuid(), null));
-                        NotBounties.debugMessage("Will give " + playerData.getPlayerName() + " a player skull when they log on next for the bounty.", false);
                     }
                 }
             }
-        }
-        if (RewardHead.isRewardKiller()) {
-            // reward head for killer
-            if (droppedHead != null)
-                // if a head was dropped for killing a player, remove it to be replaced with a custom head
-                droppedHead.remove();
+            if (RewardHead.isRewardKiller()) {
+                // reward head for killer
+                if (droppedHead != null)
+                    // if a head was dropped for killing a player, remove it to be replaced with a custom head
+                    droppedHead.remove();
 
-            rewardHead.giveRefund(killer);
-            NotBounties.debugMessage("Gave killer " + killer.getName() + " a player skull for the bounty.", false);
+                rewardHead.giveRefund(killer);
+                NotBounties.debugMessage("Gave killer " + killer.getName() + " a player skull for the bounty.", false);
+            }
         }
 
         // death tax

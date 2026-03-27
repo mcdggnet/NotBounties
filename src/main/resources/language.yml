@@ -317,6 +317,7 @@ help:
     - '&9/bounty board clear &8- &dRemoves every bounty board.'
     - '&9/bounty board remove &8- &dRemoves a specific bounty board.'
     - '&9/bounty cleanEntities <radius> &8- &dRemoves persistent bounty entities.'
+    - '&9/bounty hunt cancel (player) &8- &dCancel a bounty hunt on a player.'
     - '&9/bounty reload &8- &dReloads the plugin.'
     - '&9/bounty debug &8- &dShows plugin information and additional help.'
     - '&9/bounty pause/unpause &8- &dPauses all bounty features except viewing.'

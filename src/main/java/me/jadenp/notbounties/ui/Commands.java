@@ -2241,6 +2241,9 @@ public class Commands implements CommandExecutor, TabCompleter {
                         if ((participatingHunts < BountyHunt.getMaxJoinableHunts() || BountyHunt.getMaxJoinableHunts() <= 0) && !BountyHunt.getHunts().isEmpty())
                             tab.add("join");
                     }
+                    if (sender.hasPermission(NotBounties.getAdminPermission())) {
+                        tab.add("cancel");
+                    }
                 } else if ((args[0].equalsIgnoreCase("remove") || args[0].equalsIgnoreCase("edit") && sender.hasPermission(NotBounties.getAdminPermission()))) {
                     List<Bounty> bountyList = BountyManager.getAllBounties(-1);
                     if (bountyList.size() <= ConfigOptions.getMaxTabCompletePlayers()) {
@@ -2348,6 +2351,11 @@ public class Commands implements CommandExecutor, TabCompleter {
                 } else if (args[0].equalsIgnoreCase("sort") && sender.hasPermission("notbounties.sort")) {
                     tab.add("toggle");
                 } else if (args[0].equalsIgnoreCase("hunt") && BountyHunt.isEnabled()) {
+                    if (args[1].equalsIgnoreCase("cancel") && sender.hasPermission(NotBounties.getAdminPermission())) {
+                        for (BountyHunt hunt : BountyHunt.getHunts()) {
+                            tab.add(LoggedPlayers.getPlayerName(hunt.getHuntedPlayer()));
+                        }
+                    }
                     if (sender.hasPermission("notbounties.hunt.participate") && sender instanceof Player player) {
                         if (args[1].equalsIgnoreCase("leave")) {
                             for (BountyHunt bountyHunt : BountyHunt.getParticipatingHunts(player.getUniqueId())) {

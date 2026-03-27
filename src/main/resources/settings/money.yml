@@ -56,8 +56,11 @@ currency:
     # item values are used for tax and other features that use the total bounty
     # AUTO - Looks for a compatible plugin to get item values from, otherwise uses the item-values.yml file
     # FILE - Uses item values in the item-values.yml file
-    # ESSENTIALS - Uses item values from essentials' worth
     # DISABLE - Items don't have monetary value
+    # -=- PLUGINS -=-
+    # ESSENTIALS
+    # ECONOMY_SHOP_GUI
+    #
     # you may want to override immunity if you disable this
     item-values: AUTO
     # Players can set item bounties on people with immunity

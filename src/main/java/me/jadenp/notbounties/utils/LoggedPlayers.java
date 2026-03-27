@@ -158,7 +158,6 @@ public class LoggedPlayers {
                 playerIDs.put(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
             }
         }
-
         // check if they are logged yet
         if (isMissing(player.getUniqueId())) {
             NotBounties.debugMessage("Logging player name: " + player.getName(), false);

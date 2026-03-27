@@ -9,6 +9,7 @@ import me.jadenp.notbounties.features.LanguageOptions;
 import me.jadenp.notbounties.features.settings.money.NumberFormatting;
 import me.jadenp.notbounties.features.settings.integrations.external_api.LocalTime;
 import me.jadenp.notbounties.ui.gui.CompatabilityUtils;
+import me.jadenp.notbounties.utils.LoggedPlayers;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
@@ -328,6 +329,13 @@ public class BountyMap implements Listener {
             return;
         }
         UUID trackedPlayer = meta.getOwningPlayer().getUniqueId();
+        if (LoggedPlayers.isMissing(trackedPlayer)) {
+            if (meta.getOwnerProfile() != null && meta.getOwnerProfile().getUniqueId() != null && !LoggedPlayers.isMissing(meta.getOwnerProfile().getUniqueId())) {
+                trackedPlayer = meta.getOwnerProfile().getUniqueId();
+            } else {
+                return;
+            }
+        }
         ItemStack map = hasBounty(trackedPlayer) ? getMap(Objects.requireNonNull(getBounty(trackedPlayer))) : getMap(trackedPlayer, 0, System.currentTimeMillis());
         event.getInventory().setResult(map);
     }
@@ -470,7 +478,7 @@ public class BountyMap implements Listener {
             NotBounties.debugMessage(e.toString(), true);
             return null;
         }
-        meta.setDisplayName(LanguageOptions.parse(LanguageOptions.getMessage("map-name"), displayBounty, parser));
+        meta.setDisplayName(LanguageOptions.parse(LanguageOptions.getMessage("map-name"), displayBounty, updateTime, LocalTime.TimeFormat.SERVER, parser));
         ArrayList<String> lore = new ArrayList<>();
         for (String str : LanguageOptions.getListMessage("map-lore")) {
             lore.add(LanguageOptions.parse(str, displayBounty, updateTime, LocalTime.TimeFormat.SERVER, parser));

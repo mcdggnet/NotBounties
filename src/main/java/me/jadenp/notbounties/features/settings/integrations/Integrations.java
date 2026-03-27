@@ -24,6 +24,7 @@ public class Integrations extends ResourceConfiguration {
     private boolean worldGuardEnabled;
     private boolean packetEventsEnabled;
     private boolean luckPermsEnabled;
+    private boolean economyShopGUIEnabled;
 
     public static void onLoad(Plugin plugin) {
         // register api flags
@@ -55,6 +56,7 @@ public class Integrations extends ResourceConfiguration {
             }
         }
 
+        economyShopGUIEnabled = Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI") || Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI-Premium");
 
         papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         liteBansEnabled = Bukkit.getPluginManager().isPluginEnabled("LiteBans");
@@ -134,5 +136,9 @@ public class Integrations extends ResourceConfiguration {
 
     public boolean isLuckPermsEnabled() {
         return luckPermsEnabled;
+    }
+
+    public boolean isEconomyShopGUIEnabled() {
+        return economyShopGUIEnabled;
     }
 }

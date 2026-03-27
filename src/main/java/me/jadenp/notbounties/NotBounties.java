@@ -195,7 +195,7 @@ public final class NotBounties extends JavaPlugin {
 
         // load skins for bounties
         for (Bounty bounty : BountyManager.getAllBounties(-1))
-            SkinManager.saveSkin(bounty.getUUID());
+            SkinManager.isSkinLoaded(bounty.getUUID());
 
         // force login players that are already on the server - this will happen if the plugin is loaded without a restart
         for (Player player : Bukkit.getOnlinePlayers()) {

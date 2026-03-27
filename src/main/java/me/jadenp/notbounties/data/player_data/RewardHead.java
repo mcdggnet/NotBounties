@@ -25,6 +25,7 @@ public final class RewardHead extends OnlineRefund {
     private static boolean rewardSetters;
     private static boolean rewardKiller;
     private static boolean rewardAnyKill;
+    private static double minimumBounty;
 
     private final UUID uuid;
     private final UUID killer;
@@ -34,6 +35,11 @@ public final class RewardHead extends OnlineRefund {
         rewardSetters = config.getBoolean("setters");
         rewardKiller = config.getBoolean("claimed");
         rewardAnyKill = config.getBoolean("any-kill");
+        minimumBounty = config.getDouble("minimum-bounty");
+    }
+
+    public static double getMinimumBounty() {
+        return minimumBounty;
     }
 
     public static boolean isRewardAnyKill() {

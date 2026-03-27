@@ -7,6 +7,9 @@ skins:
   # The texture ID here is used for Discord webhooks or Bedrock player heads if configured to use a texture ID.
   # You can copy the end of the texture url, or use a UUID
   missing-skin-id: '46ba63344f49dd1c4f5488e926bf3d9e2b29916a6c50d610bb40a5273dc8c82'
+  # The amount of time in seconds before skins are refreshed.
+  # Set to 0 to disable skin refreshing.
+  refresh-interval: 86400
 
 # wanted posters of bounty
 bounty-posters:
