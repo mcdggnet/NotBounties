@@ -99,7 +99,9 @@ public class MurderBounties {
                 // increase
                 if (bountyIncrease > 0) {
                     addBounty(killer, bountyIncrease, new ArrayList<>(), new Whitelist(new TreeSet<>(), false));
-                    killer.sendMessage(parse(getPrefix() + getMessage("murder"), Objects.requireNonNull(getBounty(killer.getUniqueId())).getTotalDisplayBounty(), player));
+                    Bounty killerBounty = getBounty(killer.getUniqueId());
+                    if (killerBounty != null)
+                        killer.sendMessage(parse(getPrefix() + getMessage("murder"), killerBounty.getTotalDisplayBounty(), player));
                 }
                 if (!commands.isEmpty())
                     ActionCommands.executeCommands(player, killer, commands);
