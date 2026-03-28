@@ -7,6 +7,7 @@ import me.jadenp.notbounties.features.settings.integrations.external_api.worldgu
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -25,6 +26,8 @@ public class Integrations extends ResourceConfiguration {
     private boolean packetEventsEnabled;
     private boolean luckPermsEnabled;
     private boolean economyShopGUIEnabled;
+    private boolean blueMapEnabled;
+    private BlueMapClass blueMapClass;
 
     public static void onLoad(Plugin plugin) {
         // register api flags
@@ -57,6 +60,14 @@ public class Integrations extends ResourceConfiguration {
         }
 
         economyShopGUIEnabled = Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI") || Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI-Premium");
+
+        blueMapEnabled = Bukkit.getPluginManager().isPluginEnabled("BlueMap")
+                && config.getBoolean("bluemap.hide-bounty-players", false);
+        if (blueMapEnabled) {
+            blueMapClass = new BlueMapClass();
+        } else {
+            blueMapClass = null;
+        }
 
         papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         liteBansEnabled = Bukkit.getPluginManager().isPluginEnabled("LiteBans");
@@ -140,5 +151,14 @@ public class Integrations extends ResourceConfiguration {
 
     public boolean isEconomyShopGUIEnabled() {
         return economyShopGUIEnabled;
+    }
+
+    public boolean isBlueMapEnabled() {
+        return blueMapEnabled;
+    }
+
+    @Nullable
+    public BlueMapClass getBlueMapClass() {
+        return blueMapClass;
     }
 }

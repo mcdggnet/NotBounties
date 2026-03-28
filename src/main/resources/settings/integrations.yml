@@ -113,6 +113,11 @@ MMOLib:
     value: 10
     multiplicative: true
 
+# <===> BlueMap <===>
+bluemap:
+  # hide players with active bounties from the BlueMap live player markers
+  hide-bounty-players: false
+
 # Integration for the Duels plugin
 Duels:
   enabled: true

@@ -208,6 +208,9 @@ public final class NotBounties extends JavaPlugin {
         if (ConfigOptions.getIntegrations().isLuckPermsEnabled())
             LuckPermsClass.onEnable();
 
+        if (ConfigOptions.getIntegrations().isBlueMapEnabled())
+            Bukkit.getServer().getPluginManager().registerEvents(ConfigOptions.getIntegrations().getBlueMapClass(), this);
+
         checkForUpdate(this);
 
         // check permission immunity every 5 mins
@@ -539,6 +542,7 @@ public final class NotBounties extends JavaPlugin {
         if (integrations.isDuelsEnabled()) hooks.add("Duels");
         if (integrations.isPacketEventsEnabled()) hooks.add("PacketEvents");
         if (integrations.isLuckPermsEnabled()) hooks.add("LuckPerms");
+        if (integrations.isBlueMapEnabled()) hooks.add("BlueMap");
 
         return hooks;
     }
